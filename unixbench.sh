@@ -36,7 +36,7 @@ else
     fi
 fi
 tar -zxvf UnixBench-5.1.6.tar.gz && rm -f UnixBench-5.1.6.tar.gz
-cd UnixBench/
+cd UnixBench-5.1.6/
 
 #Run unixbench
 make
