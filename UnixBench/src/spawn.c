@@ -59,7 +59,16 @@ char	*argv[];
 			printf("fork OK\n");
 #endif
 			/* kill it right away */
-			exit(0);
+			/* By: jiajia.zhang@intel.com
+			* allocate a volatile variable and perform a inc to avoid COW, might work
+			*/
+			volatile char c = 0;
+			c++;
+			/* By: jiajia.zhang@intel.com 
+			*  use _Exit(0) to enter kernel imediately, avoid io cleaning stuff
+			*/
+			_Exit(0);
+			//exit(0);
 		} else if (slave < 0) {
 			/* woops ... */
 			fprintf(stderr,"Fork failed at iteration %lu\n", iter);
