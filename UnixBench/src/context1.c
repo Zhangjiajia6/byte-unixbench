@@ -81,7 +81,21 @@ char	*argv[];
 			cpu_set_t pmask;
 			int i;
 			CPU_ZERO(&pmask);
-			for (i = 0; i < need_affinity; i++)
+			/* By: jiajia.zhang@intel.com
+			*  designed for multi-socket cpu with hyper threading,
+			*  to force parent and child process working on diffenrent cpus (ex: parent and child work
+			*  in the physical core and logical core of the same cpu is not allowed)
+			*  , and different Numa node (if it's a multi-socket system)
+			* 
+			*  PS: This will also influence the case of single copy, for the results of "sysconf(_SC_NPROCESSORS_ONLN)"
+			*  would not change even when using numactl or taskset.
+			* 
+			*  PS2: For multi socket system without hyper threading, this code might bind the parent process and child process
+			*  in the same numa node, so please use the oringal aliyun unixbench code.
+			*/
+			for (i = 0; i < (need_affinity >> 1); i++)	/* set the physical cores */
+				CPU_SET(i, &pmask);
+			for (i = need_affinity; i < need_affinity + (need_affinity >> 1); i++)	/* set the logical cores */
 				CPU_SET(i, &pmask);
 
 			if (sched_setaffinity(0, sizeof(cpu_set_t), &pmask) == -1)
@@ -124,7 +138,24 @@ char	*argv[];
 			cpu_set_t pmask;
 			int i;
 			CPU_ZERO(&pmask);
-			for (i = need_affinity; i < (need_affinity << 1); i++)
+
+			/* By: jiajia.zhang@intel.com
+			*  designed for multi-socket cpu with hyper threading,
+			*  to force parent and child process working on diffenrent cpus (ex: parent and child work
+			*  in the physical core and logical core of the same cpu is not allowed)
+			*  , and different Numa node (if it's a multi-socket system)
+			* 
+			*  PS: This will also influence the case of single copy, for the results of "sysconf(_SC_NPROCESSORS_ONLN)"
+			*  would not change even when using numactl or taskset.
+			* 
+			*  PS2: For multi socket system without hyper threading, this code might bind the parent process and child process
+			*  in the same numa node, so please use the oringal aliyun unixbench code.
+			*/
+			
+			for (i = need_affinity >> 1; i < need_affinity; i++)	/* set the physical cores */
+				CPU_SET(i, &pmask);
+
+			for (i = need_affinity + (need_affinity >> 1); i < (need_affinity << 1); i++)	/* set the logical cores */
 				CPU_SET(i, &pmask);
 
 			if (sched_setaffinity(0, sizeof(cpu_set_t), &pmask) == -1)
